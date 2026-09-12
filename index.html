@@ -20,8 +20,11 @@
       { key: "r1", mode: "single", hunt: "o" },
       { key: "r2", mode: "single", hunt: "x" }
     ],
-    finalSummary: false,
-    nextText: "Part 1 is done. Look up at the screen and scan the second QR code."
+    // Part 1 ends on a results page of its own, covering rounds 1 and 2.
+    finalSummary: true,
+    lastPage: false,
+    resetsAll: true,
+    nextText: "That is Part 1. Look up at the screen and scan the second QR code."
   };
 </script>
 <script src="events.js"></script>
