@@ -46,7 +46,7 @@ const PAIRS = [
   { id: 4, domain: "Labor supply",
     o: { t: "A community college opens a 200-seat retail training program in your county.", real: false,
          w: "The local labor pool grows, so hiring gets easier and cheaper." },
-    x: { t: "An Amazon fulfillment center opens nearby paying three dollars more an hour.", real: false,
+    x: { t: "An Amazon fulfillment center opens nearby paying their employee $3 more an hour.", real: false,
          w: "A new employer bids up wages and pulls your staff away." } },
 
   { id: 5, domain: "Brand",
