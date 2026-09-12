@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Part 1 &middot; One at a time</title>
+<link rel="stylesheet" href="style.css">
+<!-- Pull Part 2 into the browser cache now, so a phone that loses signal later
+     can still open both of the next codes. -->
+<link rel="prefetch" href="a/index.html">
+<link rel="prefetch" href="b/index.html">
+</head>
+<body>
+<div id="app"></div>
+<script>
+  var PAGE = {
+    title: "Part 1",
+    rounds: [
+      { key: "r1", mode: "single", hunt: "o" },
+      { key: "r2", mode: "single", hunt: "x" }
+    ],
+    finalSummary: false,
+    nextText: "Part 1 is done. Look up at the screen and scan the second QR code."
+  };
+</script>
+<script src="events.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

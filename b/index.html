@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Part 2B &middot; Find the threat</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div id="app"></div>
+<script>
+  // The last page of the four. It reads every round back out of localStorage,
+  // which is shared across all three pages because they sit on one origin, and
+  // prints the combined summary the debrief is built on.
+  var PAGE = {
+    title: "Part 2B",
+    rounds: [ { key: "r4", mode: "triple", hunt: "x" } ],
+    finalSummary: true,
+    disclose: false
+  };
+</script>
+<script src="../events.js"></script>
+<script src="../game.js"></script>
+</body>
+</html>

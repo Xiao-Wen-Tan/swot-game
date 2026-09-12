@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Class tally &middot; Opportunities and threats</title>
+<style>
+/* Light theme on purpose. A projector in a lit classroom washes out dark slides. */
+:root{--ink:#101828;--dim:#667085;--line:#d0d5dd;--green:#12b76a;--red:#f04438;--gold:#dc6803;--bg:#fff;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;}
+#wrap{max-width:1100px;margin:0 auto;padding:26px 30px 60px;}
+h1{font-size:1.9rem;margin:0 0 4px;}
+.sub{color:var(--dim);font-size:1rem;margin:0 0 26px;}
+.q{border-top:2px solid var(--line);padding-top:22px;margin-top:26px;}
+.q h2{font-size:1.5rem;margin:0 0 16px;line-height:1.25;}
+.row{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.name{width:230px;font-size:1.2rem;font-weight:600;flex:none;}
+.track{flex:1;height:44px;background:#f2f4f7;border-radius:8px;overflow:hidden;}
+.fill{height:100%;width:0;transition:width .25s ease;}
+.fill.g{background:var(--green);} .fill.r{background:var(--red);} .fill.y{background:var(--gold);}
+.ctl{display:flex;align-items:center;gap:8px;flex:none;}
+.ctl button{width:46px;height:46px;font-size:1.5rem;font-weight:700;border:2px solid var(--line);
+  background:#fff;border-radius:8px;cursor:pointer;font-family:inherit;line-height:1;}
+.ctl button:active{background:#f2f4f7;}
+.ctl input{width:74px;height:46px;font-size:1.5rem;font-weight:800;text-align:center;
+  border:2px solid var(--line);border-radius:8px;font-family:inherit;}
+.reset{margin-top:10px;font-size:.9rem;background:none;border:0;color:var(--dim);
+  text-decoration:underline;cursor:pointer;font-family:inherit;padding:0;}
+
+/* two-sided event reveal */
+#amb{border-top:2px solid var(--line);padding-top:22px;margin-top:34px;}
+#ambcard{font-size:2rem;line-height:1.35;font-weight:700;padding:26px 24px;border:3px solid var(--line);
+  border-radius:14px;margin:14px 0 16px;min-height:130px;display:flex;align-items:center;}
+#ambwhy{font-size:1.25rem;line-height:1.5;color:var(--ink);background:#fffaeb;border-left:6px solid var(--gold);
+  padding:16px 18px;border-radius:0 10px 10px 0;display:none;}
+#ambnav{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap;}
+#ambnav button{padding:12px 20px;font-size:1.05rem;font-weight:700;border:2px solid var(--line);
+  background:#fff;border-radius:9px;cursor:pointer;font-family:inherit;}
+#ambcount{color:var(--dim);font-size:1rem;}
+.note{color:var(--dim);font-size:.9rem;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <h1>Count the room</h1>
+  <p class="sub">Ask for hands, click the plus button once per hand. Nothing here is saved or sent anywhere.</p>
+
+  <div class="q" id="q1"></div>
+  <div class="q" id="q2"></div>
+  <div class="q" id="q3"></div>
+
+  <div id="amb">
+    <h2 style="font-size:1.5rem;margin:0 0 6px;">Events with no right answer</h2>
+    <p class="note" style="margin-top:0;">Show the card, ask for hands, then press Reveal. Nobody in the room is wrong on these.</p>
+    <div id="ambcard"></div>
+    <div id="ambwhy"></div>
+    <div id="ambnav">
+      <button id="prev">&larr; Previous</button>
+      <button id="reveal">Reveal both readings</button>
+      <button id="nextc">Next &rarr;</button>
+      <span id="ambcount"></span>
+    </div>
+  </div>
+
+</div>
+
+<script src="events.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var QUESTIONS = [
+    { el:"q1",
+      h:"Look at your two accuracy numbers. Which were you better at?",
+      bars:[ {k:"Opportunities", c:"g"}, {k:"Threats", c:"r"}, {k:"Dead even", c:"y"} ] },
+    { el:"q2",
+      h:"Your phone gave you a label. Which one did you get?",
+      bars:[ {k:"Opportunity-leaning", c:"g"}, {k:"Balanced", c:"y"}, {k:"Threat-leaning", c:"r"} ] },
+    { el:"q3",
+      h:"Three events at once. Did your accuracy go down?",
+      bars:[ {k:"Yes, it dropped", c:"r"}, {k:"No, it held up", c:"g"} ] }
+  ];
+
+  var counts = {};
+
+  function draw(q){
+    var host = document.getElementById(q.el);
+    host.innerHTML = "";
+    host.appendChild(Object.assign(document.createElement("h2"), {textContent:q.h}));
+    q.bars.forEach(function(b){
+      var key = q.el + "|" + b.k;
+      counts[key] = counts[key] || 0;
+
+      var row = document.createElement("div"); row.className = "row";
+
+      var name = document.createElement("div"); name.className = "name"; name.textContent = b.k;
+      var track = document.createElement("div"); track.className = "track";
+      var fill = document.createElement("div"); fill.className = "fill " + b.c;
+      track.appendChild(fill);
+
+      var ctl = document.createElement("div"); ctl.className = "ctl";
+      var minus = document.createElement("button"); minus.textContent = "−";
+      var box = document.createElement("input"); box.type = "text"; box.inputMode = "numeric"; box.value = "0";
+      var plus = document.createElement("button"); plus.textContent = "+";
+      ctl.appendChild(minus); ctl.appendChild(box); ctl.appendChild(plus);
+
+      row.appendChild(name); row.appendChild(track); row.appendChild(ctl);
+      host.appendChild(row);
+
+      b._fill = fill; b._box = box; b._key = key;
+
+      plus.onclick  = function(){ counts[key]++; sync(q); };
+      minus.onclick = function(){ if (counts[key] > 0) counts[key]--; sync(q); };
+      box.onchange  = function(){ counts[key] = Math.max(0, parseInt(box.value, 10) || 0); sync(q); };
+    });
+
+    var r = document.createElement("button"); r.className = "reset"; r.textContent = "reset this question";
+    r.onclick = function(){ q.bars.forEach(function(b){ counts[b._key] = 0; }); sync(q); };
+    host.appendChild(r);
+
+    sync(q);
+  }
+
+  function sync(q){
+    var max = 1;
+    q.bars.forEach(function(b){ if (counts[b._key] > max) max = counts[b._key]; });
+    q.bars.forEach(function(b){
+      b._box.value = counts[b._key];
+      b._fill.style.width = Math.round((counts[b._key] / max) * 100) + "%";
+    });
+  }
+
+  QUESTIONS.forEach(draw);
+
+  // ---- two-sided event reveal ----
+  var ai = 0;
+  var card = document.getElementById("ambcard");
+  var why  = document.getElementById("ambwhy");
+  var cnt  = document.getElementById("ambcount");
+
+  function show(){
+    var a = AMBIGUOUS[ai];
+    card.textContent = a.t;
+    why.textContent = a.why;
+    why.style.display = "none";
+    cnt.textContent = (ai + 1) + " of " + AMBIGUOUS.length;
+  }
+  document.getElementById("reveal").onclick = function(){ why.style.display = "block"; };
+  document.getElementById("nextc").onclick  = function(){ ai = (ai + 1) % AMBIGUOUS.length; show(); };
+  document.getElementById("prev").onclick   = function(){ ai = (ai - 1 + AMBIGUOUS.length) % AMBIGUOUS.length; show(); };
+  show();
+})();
+</script>
+</body>
+</html>
