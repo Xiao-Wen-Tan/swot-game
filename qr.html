@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Make the three QR codes</title>
+<title>Make the QR code</title>
 <style>
 body{font-family:"Segoe UI",system-ui,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:28px;color:#101828;}
 h1{font-size:1.6rem;margin:0 0 6px;}
@@ -25,9 +25,9 @@ button.go{margin-top:12px;padding:14px 26px;font-size:1.05rem;font-weight:700;bo
 </head>
 <body>
 
-<h1>Make the three QR codes</h1>
-<p class="lead">Run this once, while you have a connection. Save the three images into the deck so the
-classroom never needs one.</p>
+<h1>Make the QR code</h1>
+<p class="lead">Run this once, while you have a connection. Save the image into the deck so the
+classroom never needs a connection of its own.</p>
 
 <div class="noprint">
   <label for="base">Published base URL of the game</label>
@@ -38,8 +38,8 @@ classroom never needs one.</p>
 <div id="out"></div>
 
 <div class="warn noprint">
-  <b>Do not skip this.</b> Before the visit, scan all three printed or projected codes with an actual
-  phone and play a round through each. A QR code that resolves to a 404 is the one failure in this
+  <b>Do not skip this.</b> Before the visit, scan the printed or projected code with an actual phone
+  and play both rounds through. A QR code that resolves to a 404 is the one failure in this
   exercise you cannot talk your way out of.
 </div>
 
@@ -49,9 +49,8 @@ classroom never needs one.</p>
   "use strict";
 
   var CODES = [
-    { file: "qr-part1.png",  name: "PART 1",     sub: "one event at a time", path: "" },
-    { file: "qr-part2a.png", name: "PART 2 &middot; A", sub: "three at once, find the opportunity", path: "a/" },
-    { file: "qr-part2b.png", name: "PART 2 &middot; B", sub: "three at once, find the threat", path: "b/" }
+    { file: "qr-game.png", name: "THE GAME",
+      sub: "two rounds, one event at a time", path: "" }
   ];
 
   function draw() {

@@ -57,6 +57,15 @@ p  { font-size: 1.12rem; line-height: 1.5; margin: 0 0 .9rem; }
 
 .spacer { flex: 1; min-height: 18px; }
 
+/* ---- round intro -------------------------------------------------------
+   Every line on this screen is one size, at the size of the question itself.
+   Only the closing disclaimer is smaller, because it is a footnote and not an
+   instruction. "You run Buc-ee's." keeps the h1 size above all of it. */
+
+.intro p       { font-size: 1.5rem; line-height: 1.3; margin: 0 0 .8rem; }
+.intro p.q     { font-weight: 700; }
+.intro p.tiny  { font-size: .88rem; line-height: 1.5; }
+
 /* ---- play screen -------------------------------------------------------- */
 
 #bar {
@@ -84,10 +93,17 @@ p  { font-size: 1.12rem; line-height: 1.5; margin: 0 0 .9rem; }
 .evt.bad  { border-color: var(--red);   background: var(--red-sf); }
 .evt.neut { border-color: var(--gold);  background: var(--gold-sf); }
 
-#answers { display: flex; gap: 14px; padding-top: 18px; }
-#answers .btn { font-size: 1.6rem; padding: 26px 10px; }
-#answers .yes { background: var(--green); color: #fff; }
-#answers .no  { background: var(--surface); color: var(--ink); border: 3px solid var(--line); }
+/* YES and NO must be exactly the same size. Both get flex:1 so they split the
+   row evenly, both carry a 3px border so the border does not make one taller,
+   and the shared `.btn + .btn` top margin is cancelled so NO is not pushed down. */
+#answers { display: flex; align-items: stretch; gap: 14px; padding-top: 18px; }
+#answers .btn {
+  flex: 1 1 0; width: auto; min-width: 0;
+  font-size: 1.6rem; padding: 26px 10px; border: 3px solid transparent;
+}
+#answers .btn + .btn { margin-top: 0; }
+#answers .yes { background: var(--green); color: #fff; border-color: var(--green); }
+#answers .no  { background: var(--surface); color: var(--ink); border-color: var(--line); }
 
 /* ---- results ------------------------------------------------------------ */
 

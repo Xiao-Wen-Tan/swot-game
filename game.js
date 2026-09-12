@@ -1,17 +1,18 @@
-/* Shared game engine for the Buc-ee's opportunity and threat exercise.
+/* Game engine for the Buc-ee's opportunity and threat exercise.
+   Montevallo teaching demonstration, 17 September 2026.
 
-   A page defines window.PAGE before loading this file, for example:
+   Version 3. The exercise is now two rounds, both one event at a time, on a
+   single page behind a single QR code. Round 1 hunts opportunities, round 2
+   hunts threats, and the page ends on a full results screen. The three-at-once
+   rounds and the two extra pages they needed are gone.
 
-     PAGE = {
-       title: "Part 1",
-       rounds: [ {key:"r1", mode:"single", hunt:"o"},
-                 {key:"r2", mode:"single", hunt:"x"} ],
-       finalSummary: false
-     };
+   A page defines window.PAGE before loading this file:
+
+     PAGE = { rounds: [ {key:"r1", hunt:"o"}, {key:"r2", hunt:"x"} ] };
 
    hunt "o" means the student is hunting opportunities, hunt "x" means threats.
-   Everything is kept in localStorage, which is shared across the three pages
-   because they sit on one origin. Nothing is sent anywhere.
+   Round scores are kept in localStorage so a reload during the debrief does not
+   lose them. Nothing is sent anywhere.
 
    Only cards the student actually saw are ever counted. Cards the clock never
    reached are not reported, because running out of time is not a finding. */
@@ -21,6 +22,7 @@
 
   var app = document.getElementById("app");
   var KEY = "swot2026.";
+  var ROUND_KEYS = ["r1", "r2"];
 
   // ---- storage ----------------------------------------------------------
 
@@ -33,7 +35,9 @@
   }
   function wipeAll() {
     try {
-      ["r1", "r2", "r3", "r4"].forEach(function (k) { localStorage.removeItem(KEY + k); });
+      ROUND_KEYS.forEach(function (k) { localStorage.removeItem(KEY + k); });
+      // Left over from the four-round version, in case a phone still holds it.
+      ["r3", "r4"].forEach(function (k) { localStorage.removeItem(KEY + k); });
     } catch (e) { /* private mode */ }
   }
 
@@ -55,28 +59,28 @@
     for (var i = 0; i < AMBIGUOUS.length; i++) if (AMBIGUOUS[i].id === id) return AMBIGUOUS[i];
     return null;
   }
-  function median(ns) {
+  function mean(ns) {
     if (!ns.length) return null;
-    var s = ns.slice().sort(function (a, b) { return a - b; });
-    var m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+    var s = 0;
+    for (var i = 0; i < ns.length; i++) s += ns[i];
+    return Math.round(s / ns.length);
   }
   function pct(n, d) { return d ? Math.round((n / d) * 100) : null; }
+  function secs(ms) { return ms == null ? "n/a" : (ms / 1000).toFixed(1) + "s"; }
   function el(tag, cls, html) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
     if (html != null) e.innerHTML = html;
     return e;
   }
-  function word(h) { return h === "o" ? "OPPORTUNITY" : "THREAT"; }
   function Words(h) { return h === "o" ? "Opportunities" : "Threats"; }
   function plural(n, one, many) { return n === 1 ? one : many; }
 
   // ---- deck building ----------------------------------------------------
 
-  // Single-card round: eight mirror pairs, both sides, plus two two-sided cards.
-  // Exactly half the scored cards are a yes.
-  function buildSingleDeck(spec) {
+  // Eight mirror pairs, both sides, plus the round's two-sided cards. Exactly
+  // half the scored cards are a yes.
+  function buildDeck(spec) {
     var deck = [];
     spec.pairs.forEach(function (pid) {
       var p = pairById(pid);
@@ -89,57 +93,30 @@
     return shuffle(deck);
   }
 
-  // Three-at-once round: one target plus two of the opposite valence, never drawn
-  // from the same mirror pair as the target.
-  function buildTripleDeck(spec, hunt) {
-    var other = hunt === "o" ? "x" : "o";
-    return shuffle(spec.pairs).map(function (pid) {
-      var p = pairById(pid);
-      var pool = shuffle(spec.pairs.filter(function (q) { return q !== pid; }));
-      var d1 = pairById(pool[0]), d2 = pairById(pool[1]);
-      return shuffle([
-        { kind: hunt,  pair: pid,   text: p[hunt].t },
-        { kind: other, pair: d1.id, text: d1[other].t },
-        { kind: other, pair: d2.id, text: d2[other].t }
-      ]);
-    });
-  }
-
   // ---- screens ----------------------------------------------------------
 
   function clear() { app.innerHTML = ""; }
 
   function screenIntro(round, idx, total, onGo) {
     clear();
-    var tone = round.hunt === "o" ? "var(--green)" : "var(--red)";
-    var wrap = el("div");
+    var opp = round.hunt === "o";
+    var tone = opp ? "var(--green)" : "var(--red)";
+    var wrap = el("div", "intro");
 
-    wrap.appendChild(el("p", "small dim", PAGE.title + " &middot; round " + (idx + 1) + " of " + total));
+    wrap.appendChild(el("p", "dim", "Round " + (idx + 1) + " of " + total));
     wrap.appendChild(el("h1", null, "You run Buc-ee&rsquo;s."));
-
-    if (round.mode === "single") {
-      wrap.appendChild(el("p", null, "One event at a time. Your only question is:"));
-      wrap.appendChild(el("h2", null,
-        "Is this <span style='color:" + tone + "'>" +
-        (round.hunt === "o" ? "an OPPORTUNITY" : "a THREAT") + "</span>?"));
-      wrap.appendChild(el("p", null, round.hunt === "o"
-        ? "Tap <b>YES</b> or <b>NO</b>. Find as many as you can."
-        : "Tap <b>YES</b> or <b>NO</b>. Identify all threats."));
-    } else {
-      wrap.appendChild(el("p", null, "Three events land at the same time."));
-      wrap.appendChild(el("h2", null,
-        "Tap the <span style='color:" + tone + "'>" + word(round.hunt) + "</span>."));
-      wrap.appendChild(el("p", null, round.hunt === "o"
-        ? "Exactly one of the three is an opportunity. Find as many as you can."
-        : "Exactly one of the three is a threat. Identify all threats."));
-    }
-
-    wrap.appendChild(el("p", "small dim", ROUND_SECONDS + " seconds on the clock."));
+    wrap.appendChild(el("p", null, "Events arrive one at a time. Your only question is:"));
+    wrap.appendChild(el("p", "q", "Is this <span style='color:" + tone + "'>" +
+      (opp ? "an OPPORTUNITY" : "a THREAT") + "</span>?"));
+    wrap.appendChild(el("p", null, opp
+      ? "Tap <b>YES</b> or <b>NO</b> as fast as you can read it. There are more cards than you can finish, and that is deliberate."
+      : "Tap <b>YES</b> or <b>NO</b> as fast as you can read it. Identify every threat you can."));
+    wrap.appendChild(el("p", "dim", ROUND_SECONDS + " seconds on the clock."));
     wrap.appendChild(el("div", "spacer"));
 
-    if (idx === 0 && PAGE.disclose !== false) {
+    if (idx === 0) {
       wrap.appendChild(el("p", "tiny dim",
-        "Some of these events are real Buc-ee&rsquo;s news and some were written for this class."));
+        "Some of these events are real Buc-ee&rsquo;s news. Others were written for this class."));
     }
 
     var go = el("button", "btn", "Start round " + (idx + 1));
@@ -154,10 +131,8 @@
 
     var bar = el("div"); bar.id = "bar";
     var prompt = el("div", null,
-      round.mode === "single"
-        ? "Is this <span class='hunt-" + round.hunt + "'>" +
-          (round.hunt === "o" ? "an OPPORTUNITY" : "a THREAT") + "</span>?"
-        : "Tap the <span class='hunt-" + round.hunt + "'>" + word(round.hunt) + "</span>");
+      "Is this <span class='hunt-" + round.hunt + "'>" +
+      (round.hunt === "o" ? "an OPPORTUNITY" : "a THREAT") + "</span>?");
     prompt.id = "prompt";
     var clock = el("div", null, ROUND_SECONDS); clock.id = "clock";
     bar.appendChild(prompt); bar.appendChild(clock);
@@ -165,15 +140,13 @@
     var stage = el("div"); stage.id = "stage";
     app.appendChild(bar); app.appendChild(stage);
 
-    if (round.mode === "single") {
-      var answers = el("div"); answers.id = "answers";
-      var yes = el("button", "btn yes", "YES");
-      var no  = el("button", "btn no",  "NO");
-      yes.onclick = function () { respond(true); };
-      no.onclick  = function () { respond(false); };
-      answers.appendChild(yes); answers.appendChild(no);
-      app.appendChild(answers);
-    }
+    var answers = el("div"); answers.id = "answers";
+    var yes = el("button", "btn yes", "YES");
+    var no  = el("button", "btn no",  "NO");
+    yes.onclick = function () { respond(true); };
+    no.onclick  = function () { respond(false); };
+    answers.appendChild(yes); answers.appendChild(no);
+    app.appendChild(answers);
 
     var t0 = Date.now();
     var tick = setInterval(function () {
@@ -196,18 +169,9 @@
       stage.innerHTML = "";
       locked = false;
       shownAt = Date.now();
-
-      if (round.mode === "single") {
-        var card = el("div", "evt", deck[i].text);
-        card.id = "current";
-        stage.appendChild(card);
-      } else {
-        deck[i].forEach(function (c, k) {
-          var card = el("div", "evt tap", c.text);
-          card.onclick = function () { pick(k); };
-          stage.appendChild(card);
-        });
-      }
+      var card = el("div", "evt", deck[i].text);
+      card.id = "current";
+      stage.appendChild(card);
     }
 
     function flash(node, cls, ms) {
@@ -232,26 +196,13 @@
       flash(card, correct ? "ok" : "bad", correct ? 280 : 850);
     }
 
-    function pick(k) {
-      if (locked || ended) return;
-      locked = true;
-      var cards = deck[i], c = cards[k], ms = Date.now() - shownAt;
-      var correct = (c.kind === round.hunt);
-      var target = cards.filter(function (z) { return z.kind === round.hunt; })[0];
-      log.push({
-        trial: true, correct: correct, ms: ms,
-        targetText: target.text, pickedText: c.text
-      });
-      flash(stage.children[k], correct ? "ok" : "bad", correct ? 300 : 850);
-    }
-
     next();
   }
 
   // ---- scoring ----------------------------------------------------------
   // Everything below counts only what the student actually saw.
 
-  function scoreSingle(round, res) {
+  function scoreRound(round, res) {
     var hunt = round.hunt, other = hunt === "o" ? "x" : "o";
     var seen = res.log.filter(function (r) { return r.kind !== "amb"; });
     var amb  = res.log.filter(function (r) { return r.kind === "amb"; });
@@ -266,17 +217,19 @@
     var noLab  = "You said it was not.";
 
     return {
-      mode: "single", hunt: hunt,
+      hunt: hunt,
       hits: got.length, missed: missed.length, falsePos: falsePos.length,
-      seen: seen.length, decisions: res.log.length, eventsScanned: res.log.length,
+      targets: got.length + missed.length,
+      seen: seen.length, eventsScanned: res.log.length,
       accuracy: pct(seen.filter(function (r) { return r.correct; }).length, seen.length),
-      medianMs: median(seen.map(function (r) { return r.ms; })),
+      avgMs: mean(seen.map(function (r) { return r.ms; })),
       ambSeen: amb.length,
       ambLeanedThreat: amb.filter(function (r) { return hunt === "o" ? !r.said : r.said; }).length,
       review: [
         { title: Words(hunt) + " you caught", cls: hunt,
           items: got.map(function (r) { return { text: r.text }; }) },
-        { title: Words(hunt) + " you let through", cls: hunt,
+        { title: hunt === "o" ? "Opportunities that never made your list" : "Threats that got past you",
+          cls: hunt,
           items: missed.map(function (r) { return { text: r.text }; }) },
         { title: hunt === "o" ? "Mirages you chased" : "False alarms you raised", cls: other,
           items: falsePos.map(function (r) {
@@ -284,30 +237,6 @@
           }) },
         { title: "Two-sided events, no right answer", cls: "amb",
           items: amb.map(function (r) { return { text: r.text, tag: r.said ? yesLab : noLab }; }) }
-      ]
-    };
-  }
-
-  function scoreTriple(round, res) {
-    var hunt = round.hunt;
-    var trials = res.log;
-    var got    = trials.filter(function (r) { return r.correct; });
-    var missed = trials.filter(function (r) { return !r.correct; });
-
-    return {
-      mode: "triple", hunt: hunt,
-      hits: got.length, missed: missed.length, falsePos: missed.length,
-      seen: trials.length, decisions: trials.length, eventsScanned: trials.length * 3,
-      accuracy: pct(got.length, trials.length),
-      medianMs: median(trials.map(function (r) { return r.ms; })),
-      ambSeen: 0, ambLeanedThreat: 0,
-      review: [
-        { title: Words(hunt) + " you caught", cls: hunt,
-          items: got.map(function (r) { return { text: r.targetText }; }) },
-        { title: Words(hunt) + " you let through", cls: hunt,
-          items: missed.map(function (r) {
-            return { text: r.targetText, tag: "You tapped this instead. " + r.pickedText };
-          }) }
       ]
     };
   }
@@ -353,37 +282,39 @@
 
   function screenRoundResult(round, sc, isLast, onNext) {
     clear();
+    window.scrollTo(0, 0);
     var wrap = el("div");
     var opp = round.hunt === "o";
 
     wrap.appendChild(el("h1", null, opp ? "Opportunities" : "Threats"));
-    wrap.appendChild(el("p", "small dim",
-      round.mode === "single" ? "One event at a time." : "Three events at once."));
+    wrap.appendChild(el("p", "small dim", "Round " + (opp ? "1" : "2") + ", one event at a time."));
 
     if (opp) {
       // Opportunity rounds are scored on volume, with a penalty for a false one.
       wrap.appendChild(stat("headline good", sc.hits,
         "opportunities you found",
-        "On this side of a SWOT, volume is the point. You cannot act on what you never put on the list."));
+        "In this half of a SWOT, volume is the point. You cannot exploit what you never put on the list."));
       if (sc.falsePos) {
         wrap.appendChild(stat("bad", sc.falsePos,
           plural(sc.falsePos, "mirage you chased", "mirages you chased"),
-          "You called something an opportunity when it was not one. That is the error that costs real money here.",
+          "You called something an opportunity when it was not one. That is the one error that actually costs money here.",
           true));
       }
       if (sc.missed) {
-        wrap.appendChild(stat("", sc.missed, "you looked at and passed over", "", true));
+        wrap.appendChild(stat("", sc.missed,
+          plural(sc.missed, "opportunity that never made your list",
+                            "opportunities that never made your list"), "", true));
       }
     } else {
       // Threat rounds are scored on coverage. The miss leads.
       wrap.appendChild(stat("headline bad", sc.missed,
         plural(sc.missed, "threat got past you", "threats got past you"),
-        "You looked straight at it and waved it through. On this side of a SWOT, one miss is the one that gets you."));
+        "You looked straight at it and waved it through. In this half of a SWOT, one miss is the one that gets you, and the clock is not an excuse a board accepts."));
       wrap.appendChild(stat("good", sc.hits, "threats you caught", "", true));
-      if (sc.falsePos && sc.mode === "single") {
+      if (sc.falsePos) {
         wrap.appendChild(stat("", sc.falsePos,
           plural(sc.falsePos, "false alarm", "false alarms"),
-          "You called something a threat when it was not. Cheap, next to the number at the top.", true));
+          "Cheap, compared with the number at the top.", true));
       }
     }
 
@@ -394,126 +325,136 @@
     wrap.appendChild(el("hr", "rule"));
     var pills = el("div");
     pills.appendChild(el("span", "pill", "accuracy " + (sc.accuracy == null ? "n/a" : sc.accuracy + "%")));
-    pills.appendChild(el("span", "pill", "median " + (sc.medianMs == null ? "n/a" : (sc.medianMs / 1000).toFixed(1) + "s")));
+    pills.appendChild(el("span", "pill", "average " + secs(sc.avgMs) + " per card"));
     pills.appendChild(el("span", "pill", sc.eventsScanned + " events scanned"));
     wrap.appendChild(pills);
 
     wrap.appendChild(el("div", "spacer"));
 
-    if (isLast && !PAGE.finalSummary) {
-      // No handoff screen. The round result is the last thing this page shows.
-      wrap.appendChild(el("p", "small dim",
-        PAGE.nextText || "Look up at the screen and scan the next QR code."));
-    } else {
-      var b = el("button", "btn", isLast ? "See my results" : "Next round");
-      b.onclick = onNext;
-      wrap.appendChild(b);
-    }
+    var b = el("button", "btn", isLast ? "See my results" : "Next round");
+    b.onclick = onNext;
+    wrap.appendChild(b);
     app.appendChild(wrap);
   }
 
-  // ---- final summary ----------------------------------------------------
+  // ---- final results ----------------------------------------------------
 
-  function leanLabel(d) {
-    if (d >= 20) return ["strongly opportunity-oriented", "var(--green)"];
-    if (d >= 8)  return ["opportunity-leaning", "var(--green)"];
-    if (d > -8)  return ["balanced", "var(--gold)"];
-    if (d > -20) return ["threat-leaning", "var(--red)"];
-    return ["strongly threat-oriented", "var(--red)"];
-  }
-  function sum(list, f) {
-    return list.reduce(function (a, x) { return a + (x && x[f] ? x[f] : 0); }, 0);
-  }
-  function avgAcc(list) {
-    var v = list.filter(function (x) { return x && x.accuracy != null; });
-    if (!v.length) return null;
-    return Math.round(v.reduce(function (a, x) { return a + x.accuracy; }, 0) / v.length);
-  }
-  function avgMs(list) {
-    var v = list.filter(function (x) { return x && x.medianMs != null; });
-    if (!v.length) return null;
-    return Math.round(v.reduce(function (a, x) { return a + x.medianMs; }, 0) / v.length);
+  /* Regulatory focus, in the sense Higgins uses it. A promotion focus works
+     toward gains, a prevention focus works against losses. The gap between the
+     two accuracy numbers is the only thing this game can speak to, and the
+     caption says so in as many words. */
+  function focusLabel(gap) {
+    if (gap >= 8) {
+      return {
+        name: "promotion-focused",
+        color: "var(--green)",
+        why: "A promotion focus works toward gains. It asks what there is to be won, and it will " +
+             "put up with a few false alarms rather than let a good thing go past. Today you read " +
+             "the opportunity cards more accurately than the threat cards, which is that pattern."
+      };
+    }
+    if (gap <= -8) {
+      return {
+        name: "prevention-focused",
+        color: "var(--red)",
+        why: "A prevention focus works against losses. It asks what could go wrong, and it treats " +
+             "a threat that slips through as the expensive mistake. Today you read the threat " +
+             "cards more accurately than the opportunity cards, which is that pattern."
+      };
+    }
+    return {
+      name: "balanced between the two",
+      color: "var(--gold)",
+      why: "A promotion focus works toward gains and asks what there is to be won. A prevention " +
+           "focus works against losses and asks what could go wrong. Your two accuracy numbers " +
+           "came out close enough together that this game cannot separate them."
+    };
   }
 
   function screenFinal() {
     clear();
     window.scrollTo(0, 0);
 
-    var r = {};
-    ["r1", "r2", "r3", "r4"].forEach(function (k) { r[k] = load(k); });
-    var have = ["r1", "r2", "r3", "r4"].filter(function (k) { return r[k]; });
-
-    var end = PAGE.lastPage === true;
-
+    var o = load("r1"), x = load("r2");
     var wrap = el("div");
-    wrap.appendChild(el("h1", null, end ? "Your results" : "Your first two rounds"));
+    wrap.appendChild(el("h1", null, "Your results"));
 
-    if (end && have.length < 4) {
+    if (!o || !x) {
       wrap.appendChild(el("p", "small dim",
-        "You finished " + have.length + " of the 4 rounds on this phone, so this uses only what you played."));
-    } else if (!end) {
-      wrap.appendChild(el("p", "small dim",
-        "Halfway. Two more rounds to come, and these numbers will be added to at the end."));
+        "You finished only one of the two rounds on this phone, so the comparison below is missing a side."));
     }
 
-    var oSide = [r.r1, r.r3].filter(Boolean), xSide = [r.r2, r.r4].filter(Boolean);
-    var oAcc = avgAcc(oSide), xAcc = avgAcc(xSide);
+    // a. accuracy, opportunities against threats
+    if (o && x && o.accuracy != null && x.accuracy != null) {
+      var gap = o.accuracy - x.accuracy;
+      wrap.appendChild(stat("headline", o.accuracy + "% vs " + x.accuracy + "%",
+        "accuracy spotting opportunities, versus spotting threats",
+        "A gap of " + (gap > 0 ? "+" : "") + gap + " points toward " +
+        (gap === 0 ? "neither side" : (gap > 0 ? "opportunities" : "threats")) + ".", true));
+    }
 
-    if (oAcc != null && xAcc != null) {
-      var gap = oAcc - xAcc;
-      var lab = leanLabel(gap);
-      wrap.appendChild(stat("headline", oAcc + "% vs " + xAcc + "%",
-        "spotting opportunities, versus spotting threats",
-        "A gap of " + (gap > 0 ? "+" : "") + gap + " points.", true));
+    // b. total identified, opportunities against threats
+    if (o && x) {
+      wrap.appendChild(stat("", o.hits + " vs " + x.hits,
+        "opportunities identified, versus threats identified",
+        "You reached " + o.targets + plural(o.targets, " opportunity card", " opportunity cards") +
+        " and " + x.targets + plural(x.targets, " threat card", " threat cards") +
+        " before the clock ran out.", true));
+    }
 
+    // c. promotion or prevention focus, with the explanation
+    if (o && x && o.accuracy != null && x.accuracy != null) {
+      var f = focusLabel(o.accuracy - x.accuracy);
       var s = el("div", "stat");
       s.innerHTML =
         "<div class='lab'>On this one game, today, you came out</div>" +
-        "<div class='n sm' style='margin-top:8px;color:" + lab[1] + "'>" + lab[0] + "</div>" +
-        "<div class='sub'>This is a classroom demonstration, not a validated instrument. " +
-        "It measures how you answered a few minutes of cards about a highway store, and nothing more.</div>";
+        "<div class='n sm' style='margin-top:8px;color:" + f.color + "'>" + f.name + "</div>" +
+        "<div class='sub'>" + f.why + "</div>" +
+        "<div class='sub'>This is a classroom demonstration, not a validated instrument. It " +
+        "measures how you answered a few minutes of cards about a highway store, and nothing more.</div>";
       wrap.appendChild(s);
     }
 
-    if (oSide.length) {
-      wrap.appendChild(stat("good", sum(oSide, "hits"), "opportunities you found in total",
-        sum(oSide, "falsePos") + " times you called something an opportunity when it was not.", true));
-    }
-    if (xSide.length) {
-      wrap.appendChild(stat("bad", sum(xSide, "missed"), "threats you looked at and let through",
-        "You caught " + sum(xSide, "hits") + ".", true));
+    // d0. average time per decision on each side
+    if (o && x && o.avgMs && x.avgMs) {
+      wrap.appendChild(stat("", secs(o.avgMs) + " vs " + secs(x.avgMs),
+        "average time per decision, opportunities versus threats",
+        "Speed is not the same thing as accuracy. Compare this pair with the pair at the top.", true));
     }
 
-    var oMs = avgMs(oSide), xMs = avgMs(xSide);
-    if (oMs && xMs) {
-      wrap.appendChild(stat("", (oMs / 1000).toFixed(1) + "s vs " + (xMs / 1000).toFixed(1) + "s",
-        "time per decision, opportunities versus threats", "", true));
+    // d. opportunities missed
+    if (o) {
+      wrap.appendChild(stat("", o.missed,
+        plural(o.missed, "opportunity you looked at and passed over",
+                         "opportunities you looked at and passed over"),
+        "Each one was on the screen in front of you and did not make your list.", true));
     }
 
-    var single = [r.r1, r.r2].filter(Boolean), triple = [r.r3, r.r4].filter(Boolean);
-    if (single.length && triple.length) {
-      wrap.appendChild(stat("", sum(single, "eventsScanned") + " vs " + sum(triple, "eventsScanned"),
-        "events you scanned, one at a time versus three at once",
-        "Accuracy " + avgAcc(single) + "% one at a time, " + avgAcc(triple) + "% three at once.", true));
+    // e. threats missed
+    if (x) {
+      wrap.appendChild(stat("bad", x.missed,
+        plural(x.missed, "threat you looked at and waved through",
+                         "threats you looked at and waved through"),
+        "You caught " + x.hits + ".", true));
     }
 
-    var ambSeen = sum(single, "ambSeen");
+    // The two-sided events, which have no right answer at all.
+    var ambSeen = (o ? o.ambSeen : 0) + (x ? x.ambSeen : 0);
     if (ambSeen) {
-      wrap.appendChild(stat("", sum(single, "ambLeanedThreat") + " of " + ambSeen,
+      var lean = (o ? o.ambLeanedThreat : 0) + (x ? x.ambLeanedThreat : 0);
+      wrap.appendChild(stat("", lean + " of " + ambSeen,
         "two-sided events you read as a threat",
         "Those had no right answer. Both readings were defensible.", true));
     }
 
-    // Every card from every round, for the discussion. Groups with the same
-    // title are merged so the page shows four clean lists, not eight.
+    // Every card from both rounds, for the discussion. Groups sharing a title
+    // are merged, and a card that appeared twice is listed once.
     var all = [], byTitle = {};
-    ["r1", "r2", "r3", "r4"].forEach(function (k) {
-      if (!r[k] || !r[k].review) return;
-      r[k].review.forEach(function (g) {
+    [o, x].forEach(function (r) {
+      if (!r || !r.review) return;
+      r.review.forEach(function (g) {
         if (!g.items.length) return;
         if (byTitle[g.title]) {
-          // The same card can appear in two rounds. Inside one group that reads
-          // as a duplicate, so keep only the first.
           var have = {};
           byTitle[g.title].items.forEach(function (it) { have[it.text] = 1; });
           g.items.forEach(function (it) {
@@ -532,18 +473,12 @@
     }
 
     wrap.appendChild(el("hr", "rule"));
-
-    if (end) {
-      var saveBtn = el("button", "btn ghost noprint", "Save these results");
-      saveBtn.onclick = function () { window.print(); };
-      wrap.appendChild(saveBtn);
-      wrap.appendChild(el("p", "tiny dim noprint",
-        "Opens your phone&rsquo;s print dialog. Choose Save as PDF to keep a copy. " +
-        "Nothing here was sent anywhere, it lives only on this phone."));
-    } else {
-      wrap.appendChild(el("p", "small dim",
-        PAGE.nextText || "Look up at the screen and scan the next QR code."));
-    }
+    var saveBtn = el("button", "btn ghost noprint", "Save these results");
+    saveBtn.onclick = function () { window.print(); };
+    wrap.appendChild(saveBtn);
+    wrap.appendChild(el("p", "tiny dim noprint",
+      "Opens your phone&rsquo;s print dialog. Choose Save as PDF to keep a copy. " +
+      "Nothing here was sent anywhere, it lives only on this phone."));
 
     app.appendChild(wrap);
   }
@@ -558,27 +493,20 @@
     var isLast = cur === PAGE.rounds.length - 1;
 
     screenIntro(round, cur, PAGE.rounds.length, function () {
-      var deck = round.mode === "single"
-        ? buildSingleDeck(spec)
-        : buildTripleDeck(spec, round.hunt);
-
-      screenPlay(round, deck, function (res) {
-        var sc = round.mode === "single" ? scoreSingle(round, res) : scoreTriple(round, res);
+      screenPlay(round, buildDeck(spec), function (res) {
+        var sc = scoreRound(round, res);
         save(round.key, sc);
         screenRoundResult(round, sc, isLast, function () {
           cur++;
           if (cur < PAGE.rounds.length) runRound();
-          else if (PAGE.finalSummary) screenFinal();
+          else screenFinal();
         });
       });
     });
   }
 
   window.addEventListener("load", function () {
-    // Part 1 is the start of the exercise, so clear anything left over from a
-    // previous run. Otherwise a replay would fold old Part 2 numbers into the
-    // halfway results page.
-    if (PAGE.resetsAll) wipeAll();
+    wipeAll();
     runRound();
   });
 })();
