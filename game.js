@@ -235,7 +235,8 @@
       review: [
         { title: Words(hunt) + " you caught", cls: hunt,
           items: got.map(function (r) { return { text: r.text }; }) },
-        { title: hunt === "o" ? "Opportunities that never made your list" : "Threats that got past you",
+        { title: hunt === "o" ? "Opportunities you came across but missed"
+                              : "Threats you came across but overlooked",
           cls: hunt,
           items: missed.map(function (r) { return { text: r.text }; }) },
         { title: hunt === "o" ? "Mirages you chased" : "False alarms you raised", cls: other,
@@ -309,14 +310,15 @@
       }
       if (sc.missed) {
         wrap.appendChild(stat("", sc.missed,
-          plural(sc.missed, "opportunity that never made your list",
-                            "opportunities that never made your list"), "", true));
+          plural(sc.missed, "opportunity you came across but missed",
+                            "opportunities you came across but missed"), "", true));
       }
     } else {
       // Threat rounds are scored on coverage. The miss leads.
       wrap.appendChild(stat("headline bad", sc.missed,
-        plural(sc.missed, "threat got past you", "threats got past you"),
-        "You looked straight at it and waved it through. In this half of a SWOT, one miss is the one that gets you, and the clock is not an excuse a board accepts."));
+        plural(sc.missed, "threat you came across but overlooked",
+                          "threats you came across but overlooked"),
+        "You looked straight at it and waved it through. In this half of a SWOT, one miss is the one that gets you."));
       wrap.appendChild(stat("good", sc.hits, "threats you caught", "", true));
       if (sc.falsePos) {
         wrap.appendChild(stat("", sc.falsePos,
@@ -404,9 +406,9 @@
     if (o && x) {
       wrap.appendChild(stat("", o.hits + " vs " + x.hits,
         "opportunities identified, versus threats identified",
-        "You reached " + o.targets + plural(o.targets, " opportunity card", " opportunity cards") +
+        "Out of the " + o.targets + plural(o.targets, " opportunity card", " opportunity cards") +
         " and " + x.targets + plural(x.targets, " threat card", " threat cards") +
-        " before the clock ran out.", true));
+        " you actually saw.", true));
     }
 
     // c. promotion or prevention focus, with the explanation
@@ -432,16 +434,16 @@
     // d. opportunities missed
     if (o) {
       wrap.appendChild(stat("", o.missed,
-        plural(o.missed, "opportunity you looked at and passed over",
-                         "opportunities you looked at and passed over"),
-        "Each one was on the screen in front of you and did not make your list.", true));
+        plural(o.missed, "opportunity you came across but missed",
+                         "opportunities you came across but missed"),
+        "Each one was on the screen in front of you and you said no.", true));
     }
 
     // e. threats missed
     if (x) {
       wrap.appendChild(stat("bad", x.missed,
-        plural(x.missed, "threat you looked at and waved through",
-                         "threats you looked at and waved through"),
+        plural(x.missed, "threat you came across but overlooked",
+                         "threats you came across but overlooked"),
         "You caught " + x.hits + ".", true));
     }
 
