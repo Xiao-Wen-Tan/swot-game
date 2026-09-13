@@ -78,14 +78,17 @@
 
   // ---- deck building ----------------------------------------------------
 
-  // Eight mirror pairs, both sides, plus the round's two-sided cards. Exactly
-  // half the scored cards are a yes.
-  function buildDeck(spec) {
+  // One card from each pair, never both halves. `target` pairs give the side the
+  // student is hunting, `decoy` pairs give the opposite side, and the two lists
+  // are the same length, so exactly half the scored cards are a yes.
+  function buildDeck(spec, hunt) {
+    var other = hunt === "o" ? "x" : "o";
     var deck = [];
-    spec.pairs.forEach(function (pid) {
-      var p = pairById(pid);
-      deck.push({ kind: "o", pair: pid, text: p.o.t });
-      deck.push({ kind: "x", pair: pid, text: p.x.t });
+    spec.target.forEach(function (pid) {
+      deck.push({ kind: hunt, pair: pid, text: pairById(pid)[hunt].t });
+    });
+    spec.decoy.forEach(function (pid) {
+      deck.push({ kind: other, pair: pid, text: pairById(pid)[other].t });
     });
     (spec.ambig || []).forEach(function (aid) {
       deck.push({ kind: "amb", id: aid, text: ambById(aid).t });
@@ -93,24 +96,32 @@
     return shuffle(deck);
   }
 
+  function deckSize(spec) {
+    return spec.target.length + spec.decoy.length + (spec.ambig || []).length;
+  }
+
   // ---- screens ----------------------------------------------------------
 
   function clear() { app.innerHTML = ""; }
 
-  function screenIntro(round, idx, total, onGo) {
+  function screenIntro(round, idx, total, onGo, cards) {
     clear();
     var opp = round.hunt === "o";
     var tone = opp ? "var(--green)" : "var(--red)";
     var wrap = el("div", "intro");
 
+    // Three spacers, so the screen falls into three bands: who you are at the
+    // top, the question in the middle, the terms of the round below it, and the
+    // button at the foot. `.intro` is the flex column that makes them grow.
     wrap.appendChild(el("p", "dim", "Round " + (idx + 1) + " of " + total));
     wrap.appendChild(el("h1", null, "You run Buc-ee&rsquo;s."));
-    wrap.appendChild(el("p", null, "Events arrive one at a time. Your only question is:"));
+    wrap.appendChild(el("div", "spacer"));
     wrap.appendChild(el("p", "q", "Is this <span style='color:" + tone + "'>" +
       (opp ? "an OPPORTUNITY" : "a THREAT") + "</span>?"));
-    wrap.appendChild(el("p", null, opp
-      ? "Tap <b>YES</b> or <b>NO</b> as fast as you can read it. There are more cards than you can finish, and that is deliberate."
-      : "Tap <b>YES</b> or <b>NO</b> as fast as you can read it. Identify every threat you can."));
+    wrap.appendChild(el("p", null, "Tap <b>YES</b> or <b>NO</b> as fast as you can."));
+    wrap.appendChild(el("div", "spacer"));
+    wrap.appendChild(el("p", "dim",
+      cards + " cards. Most people reach the end, so read each one rather than racing the clock."));
     wrap.appendChild(el("p", "dim", ROUND_SECONDS + " seconds on the clock."));
     wrap.appendChild(el("div", "spacer"));
 
@@ -416,7 +427,7 @@
     }
 
     // d0. average time per decision on each side
-    if (o && x && o.avgMs && x.avgMs) {
+    if (o && x && o.avgMs != null && x.avgMs != null) {
       wrap.appendChild(stat("", secs(o.avgMs) + " vs " + secs(x.avgMs),
         "average time per decision, opportunities versus threats",
         "Speed is not the same thing as accuracy. Compare this pair with the pair at the top.", true));
@@ -493,7 +504,7 @@
     var isLast = cur === PAGE.rounds.length - 1;
 
     screenIntro(round, cur, PAGE.rounds.length, function () {
-      screenPlay(round, buildDeck(spec), function (res) {
+      screenPlay(round, buildDeck(spec, round.hunt), function (res) {
         var sc = scoreRound(round, res);
         save(round.key, sc);
         screenRoundResult(round, sc, isLast, function () {
@@ -502,7 +513,7 @@
           else screenFinal();
         });
       });
-    });
+    }, deckSize(spec));
   }
 
   window.addEventListener("load", function () {

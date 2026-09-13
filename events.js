@@ -24,7 +24,7 @@
    Edit the wording freely. No game code depends on it. */
 
 const PAIRS = [
-  // ---- Block A, round 1 ---------------------------------------------------
+  // ---- Block A, dealt into round 1 ----------------------------------------
   { id: 1, domain: "Highway access",
     o: { t: "The state approves a new I-65 interchange 400 yards from your Athens store.", real: false,
          w: "The state acts, not you. More cars can reach the store without trying." },
@@ -73,7 +73,6 @@ const PAIRS = [
     x: { t: "Alabama raises the state gasoline tax by 12 cents a gallon.", real: false,
          w: "Government raises the pump price, which cuts the volume that draws people in." } },
 
-  // ---- Block B, round 2 ---------------------------------------------------
   { id: 9, domain: "Merchandise",
     o: { t: "A country singer wears your logo shirt on stage and the run sells out.", real: false,
          w: "An outsider creates demand for your highest-margin merchandise." },
@@ -86,6 +85,7 @@ const PAIRS = [
     x: { t: "Highway frontage land across the Southeast is appraising 30 percent higher.", real: false,
          w: "The real estate market prices you out of the sites you need." } },
 
+  // ---- Block B, dealt into round 2 ----------------------------------------
   { id: 11, domain: "National press",
     o: { t: "A national magazine names your restrooms the best rest stop in America.", real: true,
          w: "Outside media confirms your reputation to people who never heard of you." },
@@ -107,26 +107,25 @@ const PAIRS = [
   { id: 14, domain: "Weather",
     o: { t: "A mild winter keeps the Southeast interstates clear every weekend through February.", real: false,
          w: "Weather you do not control keeps your customers driving." },
-    x: { t: "A hurricane closes your interstate for nine days in peak travel season.", real: false,
+    x: { t: "A hurricane closes your interstate for 9 days in peak travel season.", real: false,
          w: "Weather you do not control stops your customers reaching you." } },
 
   { id: 15, domain: "Nearby attractions",
-    o: { t: "A new national park opens and draws two million visitors to your corridor.", real: false,
+    o: { t: "A new national park opens and draws 2 million visitors to your corridor.", real: false,
          w: "Someone else's attraction fills your road with travelers." },
     x: { t: "A theme park on your corridor announces it will close next season.", real: false,
          w: "Someone else's attraction stops sending travelers down your road." } },
 
   { id: 16, domain: "Payments",
-    o: { t: "A card network waives your processing fees for three years to win the account.", real: false,
+    o: { t: "A card network waives your processing fees for 3 years to win the account.", real: false,
          w: "A supplier cuts a cost that sits on every single transaction." },
     x: { t: "Your payment processor is breached and 60,000 customer card numbers are exposed.", real: false,
          w: "A supplier's failure exposes your customers and your name." } },
 
-  // ---- Block C, spares. Not dealt into rounds 1 or 2. ----------------------
   { id: 17, domain: "Acquisition",
     o: { t: "Two family-owned travel centers on your corridor offer to sell to you.", real: false,
          w: "Owners outside the company offer you sites already on the right road." },
-    x: { t: "A private equity firm buys nine travel centers on your corridor.", real: false,
+    x: { t: "A private equity firm buys 9 travel centers on your corridor.", real: false,
          w: "A well-funded owner takes the sites you wanted and will spend to compete." } },
 
   { id: 18, domain: "Consumer taste",
@@ -175,14 +174,26 @@ const AMBIGUOUS = [
 
 /* Round definitions.
 
-   The game is now two rounds, both one event at a time. Each round is 8 mirror
-   pairs, so exactly half the scored cards are a YES, plus 3 two-sided cards that
-   have no right answer. That is 19 cards per round, of which 8 are a definite
-   yes, 8 a definite no, and 3 could be argued either way. */
+   Every pair contributes exactly ONE card, and no pair id is ever dealt twice,
+   in a round or across the game. A student therefore never sees both halves of
+   a mirror pair, so nothing in the deck hands them the answer by contrast.
+
+   `target` lists the pairs that give the card the student is hunting, which is
+   a YES. `decoy` lists the pairs that give the opposite side, which is a NO.
+   Five of each keeps exactly half the scored cards a YES. With 3 two-sided
+   cards on top, a round is 13 cards, and most students will reach the end.
+
+   Pair 11 sits in round 2's decoy set deliberately. Its opportunity side is one
+   of the only three real events in the bank, and it would otherwise never be
+   dealt at all.
+
+   The pairs are still written and length-matched as mirrors. That is what keeps
+   the two rounds comparable: round 1's five targets average 12.4 words and
+   round 2's five average 12.0. */
 
 const ROUNDS = {
-  r1: { pairs: [1, 2, 3, 4, 5, 6, 7, 8],        ambig: ["a1", "a2", "a5"] },
-  r2: { pairs: [9, 10, 11, 12, 13, 14, 15, 16], ambig: ["a3", "a4", "a6"] }
+  r1: { target: [1, 2, 3, 5, 6],      decoy: [4, 7, 8, 9, 10],     ambig: ["a1", "a2", "a5"] },
+  r2: { target: [12, 13, 14, 15, 16], decoy: [11, 17, 18, 19, 20], ambig: ["a3", "a4", "a6"] }
 };
 
 const ROUND_SECONDS = 90;
