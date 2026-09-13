@@ -144,7 +144,104 @@ const PAIRS = [
     o: { t: "The Federal Reserve cuts rates and your cost of building a store falls.", real: false,
          w: "Cheaper money matters enormously when every store is self-funded." },
     x: { t: "The Federal Reserve raises rates and your cost of building a store rises.", real: false,
-         w: "Dearer money slows growth hard when every store is self-funded." } }
+         w: "Dearer money slows growth hard when every store is self-funded." } },
+
+  // ---- Block C, written to bring each round back up to 21 cards -----------
+  { id: 21, domain: "Tourism promotion",
+    o: { t: "The state tourism board buys a season of ads for your highway corridor.", real: false,
+         w: "An outside body pays to put more travellers on your road." },
+    x: { t: "The state tourism board cuts its highway advertising budget in half this year.", real: false,
+         w: "An outside body stops paying to put travellers on your road." } },
+
+  { id: 22, domain: "Insurance",
+    o: { t: "Your insurer cuts property premiums 20 percent after a wind-rating upgrade.", real: false,
+         w: "An outside underwriter lowers a fixed cost on every building you own." },
+    x: { t: "Your insurer raises property premiums 30 percent after a bad storm season.", real: false,
+         w: "An outside underwriter raises a fixed cost on every building you own." } },
+
+  { id: 23, domain: "Water supply",
+    o: { t: "The county approves a new water line to your highway site.", real: false,
+         w: "A utility outside the company unlocks a site you could not otherwise build." },
+    x: { t: "A drought order bans car washes across 3 counties this summer.", real: false,
+         w: "A regulator shuts down a service that pulls cars off the road." } },
+
+  { id: 24, domain: "Consumer confidence",
+    o: { t: "Southeast consumer confidence climbs to a 10-year high this quarter.", real: false,
+         w: "Shoppers outside your control feel richer and spend more per stop." },
+    x: { t: "Southeast consumer confidence falls to a 10-year low this quarter.", real: false,
+         w: "Shoppers outside your control feel poorer and spend less per stop." } },
+
+  { id: 25, domain: "Freight cost",
+    o: { t: "Truckload freight rates on your supply lanes fall 15 percent.", real: false,
+         w: "A haulage market you do not set lowers the cost of stocking every store." },
+    x: { t: "Truckload freight rates on your supply lanes rise 15 percent.", real: false,
+         w: "A haulage market you do not set raises the cost of stocking every store." } },
+
+  { id: 26, domain: "Supplier terms",
+    o: { t: "A jerky supplier offers you 3 years of fixed wholesale pricing.", real: false,
+         w: "A supplier absorbs the price risk on one of your best-selling lines." },
+    x: { t: "A fire destroys the plant that makes your private-label fudge.", real: false,
+         w: "A supplier's disaster takes a signature product off your shelves." } },
+
+  { id: 27, domain: "Electricity price",
+    o: { t: "Your utility approves a cheaper off-peak power rate for large retail sites.", real: false,
+         w: "A regulated utility cuts a bill that runs 24 hours a day at every store." },
+    x: { t: "Your utility raises commercial power rates 14 percent across the state.", real: false,
+         w: "A regulated utility raises a bill that runs 24 hours a day at every store." } },
+
+  { id: 28, domain: "Fuel regulation",
+    o: { t: "The state approves year-round E15 fuel sales at your pumps.", real: false,
+         w: "A rule change lets you sell a cheaper grade that draws price-led drivers." },
+    x: { t: "The state orders new vapor-recovery equipment on every fuel pump.", real: false,
+         w: "A rule change forces capital spending across every pump you own." } },
+
+  { id: 29, domain: "Packaging rules",
+    o: { t: "A state drops the deposit fee on every bottled drink you sell.", real: false,
+         w: "A law change takes a per-unit cost off a high-volume category." },
+    x: { t: "A state bans the foam cups your fountain drink program runs on.", real: false,
+         w: "A law change forces you to re-tool a high-volume category." } },
+
+  { id: 30, domain: "Online reviews",
+    o: { t: "A travel review platform ranks you the top road-trip stop nationally.", real: false,
+         w: "An outside rater sends drivers to you before they have left home." },
+    x: { t: "A travel review platform flags your locations for long fuel queues.", real: false,
+         w: "An outside rater warns drivers off before they have left home." } },
+
+  { id: 31, domain: "Event tourism",
+    o: { t: "A college football playoff game lands 60 miles down your highway.", real: false,
+         w: "Somebody else's event fills your road for a weekend you did not plan." },
+    x: { t: "The state fair moves off your highway to a rival corridor.", real: false,
+         w: "Somebody else's event stops filling your road every autumn." } },
+
+  { id: 32, domain: "School calendar",
+    o: { t: "3 states add a week of fall break to the school calendar.", real: false,
+         w: "A calendar you do not set creates new family travel weeks." },
+    x: { t: "2 states cut 2 weeks from the summer school holiday this year.", real: false,
+         w: "A calendar you do not set removes family travel weeks." } },
+
+  { id: 33, domain: "Import costs",
+    o: { t: "A tariff on imported drinkware is lifted after 4 years.", real: false,
+         w: "Trade policy cuts the landed cost of high-margin merchandise." },
+    x: { t: "A tariff adds 25 percent to the drinkware you import.", real: false,
+         w: "Trade policy raises the landed cost of high-margin merchandise." } },
+
+  { id: 34, domain: "Product recall",
+    o: { t: "A national recall pulls your biggest rival's packaged snacks from shelves.", real: false,
+         w: "A regulator empties a competitor's shelf and leaves yours full." },
+    x: { t: "A national recall pulls your supplier's jerky from your shelves.", real: false,
+         w: "A regulator empties your shelf over something you did not make." } },
+
+  { id: 35, domain: "Truck routing",
+    o: { t: "A new truck-only bypass routes freight traffic away from your exit.", real: false,
+         w: "A road authority removes the trucks you deliberately do not serve." },
+    x: { t: "A new freight route sends 4,000 trucks a day past your exit.", real: false,
+         w: "A road authority fills your exit with traffic you refuse to take." } },
+
+  { id: 36, domain: "Highway signage",
+    o: { t: "The state approves tall logo signs a mile ahead of your exit.", real: false,
+         w: "A regulator lets you reach drivers before they choose where to stop." },
+    x: { t: "The state restricts logo signs along the interstate you built on.", real: false,
+         w: "A regulator cuts off how you reach drivers before they choose." } }
 ];
 
 /* Two-sided cards. Never scored right or wrong. The game records only which way
@@ -180,20 +277,24 @@ const AMBIGUOUS = [
 
    `target` lists the pairs that give the card the student is hunting, which is
    a YES. `decoy` lists the pairs that give the opposite side, which is a NO.
-   Five of each keeps exactly half the scored cards a YES. With 3 two-sided
-   cards on top, a round is 13 cards, and most students will reach the end.
+   Nine of each keeps exactly half the scored cards a YES. With 3 two-sided
+   cards on top, a round is 21 cards in 90 seconds, which is more than anyone
+   gets through, and that is the point.
 
    Pair 11 sits in round 2's decoy set deliberately. Its opportunity side is one
    of the only three real events in the bank, and it would otherwise never be
    dealt at all.
 
-   The pairs are still written and length-matched as mirrors. That is what keeps
-   the two rounds comparable: round 1's five targets average 12.4 words and
-   round 2's five average 12.0. */
+   Since the mirror no longer sits inside a round, the fairness check is between
+   rounds. The four groups average 11.9, 11.7, 11.6 and 11.8 words. */
 
 const ROUNDS = {
-  r1: { target: [1, 2, 3, 5, 6],      decoy: [4, 7, 8, 9, 10],     ambig: ["a1", "a2", "a5"] },
-  r2: { target: [12, 13, 14, 15, 16], decoy: [11, 17, 18, 19, 20], ambig: ["a3", "a4", "a6"] }
+  r1: { target: [1, 2, 3, 5, 6, 21, 24, 30, 31],
+        decoy:  [4, 7, 8, 9, 10, 22, 25, 27, 28],
+        ambig:  ["a1", "a2", "a5"] },
+  r2: { target: [12, 13, 14, 15, 16, 29, 34, 35, 36],
+        decoy:  [11, 17, 18, 19, 20, 23, 26, 32, 33],
+        ambig:  ["a3", "a4", "a6"] }
 };
 
 const ROUND_SECONDS = 90;

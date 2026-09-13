@@ -96,15 +96,11 @@
     return shuffle(deck);
   }
 
-  function deckSize(spec) {
-    return spec.target.length + spec.decoy.length + (spec.ambig || []).length;
-  }
-
   // ---- screens ----------------------------------------------------------
 
   function clear() { app.innerHTML = ""; }
 
-  function screenIntro(round, idx, total, onGo, cards) {
+  function screenIntro(round, idx, total, onGo) {
     clear();
     var opp = round.hunt === "o";
     var tone = opp ? "var(--green)" : "var(--red)";
@@ -121,7 +117,7 @@
     wrap.appendChild(el("p", null, "Tap <b>YES</b> or <b>NO</b> as fast as you can."));
     wrap.appendChild(el("div", "spacer"));
     wrap.appendChild(el("p", "dim",
-      cards + " cards. Most people reach the end, so read each one rather than racing the clock."));
+      "There are more cards than you can finish, and that is deliberate."));
     wrap.appendChild(el("p", "dim", ROUND_SECONDS + " seconds on the clock."));
     wrap.appendChild(el("div", "spacer"));
 
@@ -513,7 +509,7 @@
           else screenFinal();
         });
       });
-    }, deckSize(spec));
+    });
   }
 
   window.addEventListener("load", function () {
